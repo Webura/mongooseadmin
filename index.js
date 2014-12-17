@@ -30,7 +30,7 @@ module.exports = function (path, options) {
       else if (!options.authentication || (req.cookies && req.cookies.admintoken && tokens.indexOf(req.cookies.admintoken) >= 0)) {
         //PAGE
         if (req.path == path)
-          fs.readFile(__dirname + '/static/admin.html', 'utf8', function (err, data) {
+          fs.readFile(__dirname + '/views/admin.html', 'utf8', function (err, data) {
             if (err) console.error(err);
             res.end(data.replace(/\{\{path\}\}/g, path));
           });
@@ -97,7 +97,7 @@ module.exports = function (path, options) {
           console.log(req.param('username'), req.param('password'));
           options.authentication(req.param('username'), req.param('password'), function (authenticated) {
             if (authenticated)
-              fs.readFile(__dirname + '/static/admin.html', 'utf8', function (err, data) {
+              fs.readFile(__dirname + '/views/admin.html', 'utf8', function (err, data) {
                 var token = Math.random().toString();
                 res.cookie('admintoken', token);
                 tokens.push(token);
@@ -105,12 +105,12 @@ module.exports = function (path, options) {
                 res.end(data.replace(/\{\{path\}\}/g, path));
               });
             else
-              fs.readFile(__dirname + '/static/login.html', 'utf8', function (err, data) {
+              fs.readFile(__dirname + '/views/login.html', 'utf8', function (err, data) {
                 if (err) console.error(err);
                 res.end(data.replace(/\{\{path\}\}/g, path));
               });
           });
-        } else fs.readFile(__dirname + '/static/login.html', 'utf8', function (err, data) {
+        } else fs.readFile(__dirname + '/views/login.html', 'utf8', function (err, data) {
           if (err) console.error(err);
           res.end(data.replace(/\{\{path\}\}/g, path));
         });

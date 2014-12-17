@@ -7,7 +7,6 @@
     "url": "https://github.com/Webura/mongooseadmin"
   },
   "main": "index",
-  "private": true,
   "dependencies": {},
   "devDependencies": {},
   "optionalDependencies": {},
