@@ -16,7 +16,7 @@ What to expect
 
 How to use
 ----------
-Basic use
+Basic usage
 ```
 var mongooseadmin = require('mongooseadmin');
 app.use(mongooseadmin('/admin'));

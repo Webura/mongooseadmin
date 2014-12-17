@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Admin</title>
+    <meta name="robots" content="noindex, nofollow">
+    <meta name="googlebot" content="noindex, nofollow">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" href="{{path}}/bootstrap.min.css">
+    <style>
+        body {
+            font-size: 16px;
+            line-height: 1.5;
+        }
+
+        .table-hover td {
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+<div class="container-fluid">
+    <h1>Mongoose admin</h1>
+
+    <div class="row">
+        <div id="models" class="col-sm-1">
+        </div>
+        <div id="rows" class="col-sm-5">
+        </div>
+        <div id="data" class="col-sm-6">
+
+        </div>
+    </div>
+</div>
+
+<script src="{{path}}/jquery.min.js"></script>
+<script src="{{path}}/bootstrap.min.js"></script>
+<script>
+    var schemas;
+    $(function () {
+        $.get('{{path}}/models', function (data) {
+            var models = '<table class="table table-hover table-condensed"><thead><tr><th>Models</th></tr></thead>';
+            for (var name in data) {
+                models += '<tr><td>' + name + '</td></tr>';
+            }
+            models += '</table>';
+            schemas = data;
+            $('#models').append(models);
+        });
+        function updateRows(modelName) {
+            $.get('{{path}}/models/' + modelName, function (data) {
+                var fields = data.fields;
+                data = data.data;
+                var rows = '<table data-id="' + modelName + '" class="table table-condensed table-hover"><thead><tr>';
+                fields.forEach(function (field) {
+                    rows += '<th>' + field.toUpperCase() + '</th>';
+                });
+                rows += '</tr></thead>';
+                data.forEach(function (row) {
+                    rows += '<tr data-id="' + row._id + '">';
+                    fields.forEach(function (field) {
+                        rows += '<td>' + row[field] + '</td>';
+                    });
+                    rows += '</tr>';
+                });
+                rows += '</table>';
+                $('#rows').empty().append(rows).append('<button class="btn btn-primary" id="newRow">New row</button>');
+            });
+        }
+
+        $('#models').on('click', 'td', function () {
+            var modelName = $(this).text();
+            updateRows(modelName);
+        });
+        $('#rows').on('click', 'tr', function () {
+            var tr = $(this);
+            if (tr.find('td').length > 0) {
+                $.get('{{path}}/data/' + tr.closest('table').data('id') + '/' + tr.data('id'), function (data) {
+                    var schema = schemas[tr.closest('table').data('id')];
+                    var result = '';
+                    for (var field in schema) {
+                        if (field !== '__v') {
+                            var value = data[field];
+                            if (!schema[field].instance)
+                                schema[field].instance = 'Boolean';
+                            var info = ' - ' + schema[field].instance;
+                            if (schema[field].isRequired)
+                                info += ', required';
+                            var disabled = field == '_id' ? ' disabled ' : '';
+                            result += '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><input class="form-control" id="' + field + '" value="' + value + '"' + disabled + '></div>';
+                        }
+                    }
+                    $('#data').empty().data('id', tr.closest('table').data('id')).append(result).append('<hr><button class="btn btn-primary" id="update">Update</button> <button class="btn btn-default" id="delete">Delete</button>');
+                });
+            }
+        });
+        $('#rows').on('click', '#newRow', function () {
+            var modelName = $(this).prev().data('id');
+            var schema = schemas[modelName];
+            var result = '';
+            for (var field in schema) {
+                if (field !== '__v' && field !== '_id') {
+                    var value = data[field];
+                    if (!schema[field].instance)
+                        schema[field].instance = 'Boolean';
+                    var info = ' - ' + schema[field].instance;
+                    if (schema[field].isRequired)
+                        info += ', required';
+                    var defaultValue = '';
+                    if (typeof schema[field].defaultValue != 'undefined')
+                        defaultValue = schema[field].defaultValue;
+                    result += '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><input class="form-control" id="' + field + '" value="' + defaultValue + '"></div>';
+                }
+            }
+            $('#data').empty().data('id', modelName).append(result).append('<hr><button class="btn btn-primary" id="insert">Insert</button>');
+        });
+        function getData() {
+            var modelName = $('#data').data('id');
+            var schema = schemas[modelName];
+            var data = {};
+            $('#data input').each(function (index, input) {
+                input = $(input);
+                var value = input.val();
+                var field = input.attr('id');
+                var instance = schema[field].instance;
+                if (instance == 'Boolean' && value)
+                    data[field] = value.toLowerCase() == 'true';
+                else if (instance == 'Number' && value)
+                    data[field] = Number(value);
+                else if (instance == 'Date' && value)
+                    data[field] = new Date(value);
+                else if (instance == 'String')
+                    data[field] = value;
+                else if (instance == 'ObjectID' && value)
+                    data[field] = value;
+                else if (value)
+                    alert('Unsupported field "' + instance + '" type on ' + field);
+            });
+            return data;
+        }
+
+        $('#data').on('click', '#insert', function () {
+            var modelName = $('#data').data('id');
+            var data = getData();
+            $.post('{{path}}/insert', {
+                modelName: modelName,
+                data: JSON.stringify(data)
+            }).done(function (res) {
+                if (res != 'OK')
+                    alert(res);
+                else
+                    updateRows(modelName);
+            });
+        });
+
+        $('#data').on('click', '#update', function () {
+            var modelName = $('#data').data('id');
+            var data = getData();
+            $.post('{{path}}/update', {
+                modelName: modelName,
+                data: JSON.stringify(data)
+            }).done(function (res) {
+                if (res != 'OK')
+                    alert(res);
+                else
+                    updateRows(modelName);
+            });
+        });
+        $('#data').on('click', '#delete', function () {
+            var modelName = $('#data').data('id');
+            var data = getData();
+            $.post('{{path}}/delete', {
+                modelName: modelName,
+                data: JSON.stringify(data)
+            }).done(function (res) {
+                if (res != 'OK')
+                    alert(res);
+                else
+                    updateRows(modelName);
+            });
+        });
+    });
+</script>
+</body>
+</html>
