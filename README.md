@@ -1,17 +1,19 @@
 MongooseAdmin
 =============
 
-An admin page for Node.js projects using Mongoose and Express.js.
+Minimalist admin page for Node.js projects using Mongoose and Express.js.
 
-Main usage will be for small projects where you need admin page for CRUD operations.
+Why
+---
+Main usage will be for small projects where you need an admin page for CRUD operations.
 Just add it as a middleware and use it.
-Then when the project grows and you have spent days to develop you own admin page, you can remove MongooseAdmin.
+When your project grows and you have spent days to develop you own admin page, you can remove MongooseAdmin.
 
 What to expect
 --------------
 1. Create CRUD operations on the models defined in Mongoose
 2. Hook it in as a Express.js middleware.
-3. Options to change authentication, designs etc.
+3. Options to change authentication etc.
 
 
 How to use
@@ -39,15 +41,12 @@ Options
 *authentication* A function that takes the parameters username, password and callback.
 The callback expects to receive a boolean value for if the username and password is valid.
 
-
 Next steps
 ----------
+- Options for title, layout, etc
 - Add search filters
 - Better support for references by ObjectId
 - Support for sub documents
-
-
-
 
 License
 -------
