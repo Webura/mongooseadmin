@@ -1,0 +1,16 @@
+{
+  "author": "Johnny Tsang",
+  "name": "mongooseadmin",
+  "description": "An admin page for Node.js projects using Mongoose and Express.js",
+  "version": "0.1.0",
+  "repository": {
+    "url": "https://github.com/Webura/mongooseadmin"
+  },
+  "private": true,
+  "dependencies": {},
+  "devDependencies": {},
+  "optionalDependencies": {},
+  "engines": {
+    "node": "*"
+  }
+}
