@@ -22,16 +22,22 @@ var mongooseadmin = require('mongooseadmin');
 app.use(mongooseadmin('/admin'));
 ```
 
-
 You can extend with your own authentication:
 
 ```
-  app.use(mongooseadmin('/admin', {
-    authentication: function (username, password, callback) {
-      callback(username == 'johndoe' && password == 'supersecret');
-    }
-  }));
+var options = {
+    authentication:
+        function (username, password, callback) {
+            callback(username == 'johndoe' && password == 'supersecret');
+        }
+    };
+app.use(mongooseadmin('/admin', options));
 ```
+
+Options
+-------
+*authentication* A function that takes the parameters username, password and callback.
+The callback expects to receive a boolean value for if the username and password is valid.
 
 
 Next steps
