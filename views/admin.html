@@ -82,10 +82,10 @@
 
         $('#models').on('click', 'a', function () {
             var modelName = $(this).text();
-            if (modelName != 'Log out') {
+            $('#data').empty();
+            $('#rows').empty();
+            if (modelName != 'Log out')
                 updateRows(modelName);
-                $('#data').empty();
-            }
         });
 
         function buildInput(field, schema, data) {
@@ -127,6 +127,9 @@
 
         $('#rows').on('click', 'tr', function () {
             var tr = $(this);
+            $('#rows .info').removeClass('info');
+            tr.addClass('info');
+            $('#data').empty();
             if (tr.find('td').length > 0) {
                 $.get('{{path}}/data/' + tr.closest('table').data('id') + '/' + tr.data('id'), function (data) {
                     var schema = schemas[tr.closest('table').data('id')];
