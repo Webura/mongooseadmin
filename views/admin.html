@@ -46,8 +46,14 @@
                     .append('<li style="float:right"><a href="{{path}}/logout">Log out</a></li>')
                     .find('a').first().click();
         });
-        function updateRows(modelName) {
+        function getRows(modelName, callback) {
             $.get('{{path}}/models/' + modelName, function (data) {
+                callback(data);
+            });
+        }
+
+        function updateRows(modelName) {
+            getRows(modelName, function (data) {
                 var fields = data.fields;
                 data = data.data;
                 var rows = '<table data-id="' + modelName + '" class="table table-condensed table-hover"><thead><tr>';
@@ -75,6 +81,42 @@
             }
         });
 
+        function buildInput(field, schema, data) {
+            var value = '';
+            if (data)
+                value = data[field];
+            else if (typeof schema[field].defaultValue != 'undefined')
+                value = schema[field].defaultValue;
+            var info = ' - ' + schema[field].instance;
+            var select = '';
+            if (schema[field].instance == 'ObjectID' && schema[field].ref) {
+                info = ' - ' + schema[field].ref + ' ObjectID';
+            }
+            if (schema[field].isRequired)
+                info += ', required';
+            var required = schema[field].isRequired ? 'required' : '';
+            if (schema[field].instance == 'ObjectID' && schema[field].ref) {
+                var fieldId = '#' + field;
+                getRows(schema[field].ref, function (rows) {
+                    var selectElement = $(fieldId);
+                    rows.data.forEach(function (row) {
+                        selectElement.append('<option value="' + row._id + '">' + row[rows.fields[0]] + ', ' + row[rows.fields[1]] + ', ' + row[rows.fields[2]] + '</option>');
+                    });
+                    if (!schema[field].isRequired)
+                        selectElement.prepend('<option value=""></option>');
+                    selectElement.val(value);
+                });
+                return '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><select class="form-control" id="' + field + '"></select></div>'
+            }
+            var type = schema[field].instance == 'Number' ? 'number' : 'text';
+            var disabled = field == '_id' ? ' disabled ' : '';
+            if (schema[field].instance == 'Boolean') {
+                value = value ? 'checked' : '';
+                return '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><input style="width:auto;height:auto" type="checkbox" class="form-control" id="' + field + '" ' + value + '></div>';
+            } else
+                return '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><input type="' + type + '" ' + required + ' class="form-control" id="' + field + '" value="' + value + '"' + disabled + '>' + select + '</div>';
+        }
+
         $('#rows').on('click', 'tr', function () {
             var tr = $(this);
             if (tr.find('td').length > 0) {
@@ -83,53 +125,21 @@
                     var result = '';
                     for (var field in schema) {
                         if (field !== '__v') {
-                            var value = data[field];
-                            var info = ' - ' + schema[field].instance;
-                            if (schema[field].instance == 'ObjectID' && schema[field].ref)
-                                info = ' - ' + schema[field].ref + ' ObjectID';
-                            if (schema[field].isRequired)
-                                info += ', required';
-                            var required = schema[field].isRequired ? 'required' : '';
-                            var disabled = field == '_id' ? ' disabled ' : '';
-                            var type = 'text';
-                            if (schema[field].instance == 'Number')
-                                type = 'number';
-                            if (schema[field].instance == 'Boolean') {
-                                value = value ? 'checked' : '';
-                                result += '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><input style="width:auto;height:auto" type="checkbox" class="form-control" id="' + field + '" ' + value + '></div>';
-                            } else
-                                result += '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><input type="' + type + '" ' + required + ' class="form-control" id="' + field + '" value="' + value + '"' + disabled + '></div>';
+                            result += buildInput(field, schema, data);
                         }
                     }
                     $('#data').empty().data('id', tr.closest('table').data('id')).append(result).append('<hr><button class="btn btn-primary" id="update">Update</button> <button class="btn btn-default" id="delete">Delete</button>');
                 });
             }
         });
+
         $('#rows').on('click', '#newRow', function () {
             var modelName = $(this).prev().data('id');
             var schema = schemas[modelName];
             var result = '';
             for (var field in schema) {
                 if (field !== '__v' && field !== '_id') {
-                    var info = ' - ' + schema[field].instance;
-                    if (schema[field].instance == 'ObjectID' && schema[field].ref)
-                        info = ' - ' + schema[field].ref + ' ObjectID';
-
-                    if (schema[field].isRequired)
-                        info += ', required';
-                    required = 'required';
-                    var required = schema[field].isRequired ? 'required' : '';
-                    var defaultValue = '';
-                    if (typeof schema[field].defaultValue != 'undefined')
-                        defaultValue = schema[field].defaultValue;
-                    var type = 'text';
-                    if (schema[field].instance == 'Number')
-                        type = 'number';
-                    if (schema[field].instance == 'Boolean') {
-                        defaultValue = defaultValue ? 'checked' : '';
-                        result += '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><input style="width:auto;height:auto" type="checkbox" class="form-control" id="' + field + '" ' + defaultValue + '></div>';
-                    } else
-                        result += '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><input type="' + type + '" ' + required + ' class="form-control" id="' + field + '" value="' + defaultValue + '"></div>';
+                    result += buildInput(field, schema);
                 }
             }
             $('#data').empty().data('id', modelName).append(result).append('<hr><button class="btn btn-primary" id="insert">Insert</button>');
@@ -138,7 +148,7 @@
             var modelName = $('#data').data('id');
             var schema = schemas[modelName];
             var data = {};
-            $('#data input').each(function (index, input) {
+            $('#data input, #data select').each(function (index, input) {
                 input = $(input);
                 var value = input.val();
                 var field = input.attr('id');
@@ -194,6 +204,7 @@
                 });
             }
         });
+
         $('#data').on('click', '#delete', function () {
             if ($('#data')[0].checkValidity()) {
                 var modelName = $('#data').data('id');
