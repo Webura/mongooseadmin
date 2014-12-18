@@ -35,6 +35,7 @@
 <script>
     var schemas;
     $(function () {
+        var modelCache = {};
         $.get('{{path}}/models', function (data) {
             schemas = data;
             var models = '';
@@ -47,9 +48,15 @@
                     .find('a').first().click();
         });
         function getRows(modelName, callback) {
-            $.get('{{path}}/models/' + modelName, function (data) {
-                callback(data);
-            });
+            if (modelCache[modelName])
+                setTimeout(function () {
+                    callback(modelCache[modelName]);
+                }, 10);
+            else
+                $.get('{{path}}/models/' + modelName, function (data) {
+                    modelCache[modelName] = data;
+                    callback(modelCache[modelName]);
+                });
         }
 
         function updateRows(modelName) {
@@ -97,13 +104,14 @@
             var required = schema[field].isRequired ? 'required' : '';
             if (schema[field].instance == 'ObjectID' && schema[field].ref) {
                 var fieldId = '#' + field;
+                var options = '';
                 getRows(schema[field].ref, function (rows) {
                     var selectElement = $(fieldId);
+                    if (!schema[field].isRequired)
+                        selectElement.append('<option value=""></option>');
                     rows.data.forEach(function (row) {
                         selectElement.append('<option value="' + row._id + '">' + row[rows.fields[0]] + ', ' + row[rows.fields[1]] + ', ' + row[rows.fields[2]] + '</option>');
                     });
-                    if (!schema[field].isRequired)
-                        selectElement.prepend('<option value=""></option>');
                     selectElement.val(value);
                 });
                 return '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><select class="form-control" id="' + field + '"></select></div>'
@@ -177,6 +185,7 @@
             if ($('#data')[0].checkValidity()) {
                 var modelName = $('#data').data('id');
                 var data = getData();
+                modelCache[modelName] = null;
                 $.post('{{path}}/insert', {
                     modelName: modelName,
                     data: JSON.stringify(data)
@@ -193,6 +202,7 @@
             if ($('#data')[0].checkValidity()) {
                 var modelName = $('#data').data('id');
                 var data = getData();
+                modelCache[modelName] = null;
                 $.post('{{path}}/update', {
                     modelName: modelName,
                     data: JSON.stringify(data)
@@ -209,6 +219,7 @@
             if ($('#data')[0].checkValidity()) {
                 var modelName = $('#data').data('id');
                 var data = getData();
+                modelCache[modelName] = null;
                 $.post('{{path}}/delete', {
                     modelName: modelName,
                     data: JSON.stringify(data)
