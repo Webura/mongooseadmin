@@ -18,7 +18,6 @@ function getTitleFields(modelName) {
 module.exports = function (path, options) {
   if (!options) options = {};
   return function adminMiddleware(req, res, next) {
-    console.log(req.cookies.admintoken);
     if (req.path.indexOf(path) === 0) {
       //STATIC FILES
       if (req.path == path + '/bootstrap.min.css')
@@ -36,11 +35,26 @@ module.exports = function (path, options) {
           });
         //GET MODELS AND SCHEMAS
         else if (req.path == path + '/models') {
-          var models = {};
+          var schemas = {};
           for (var key in mongoose.models)
-            if (mongoose.models.hasOwnProperty(key))
-              models[key] = mongoose.models[key].schema.paths;
-          res.send(models);
+            if (mongoose.models.hasOwnProperty(key)) {
+              var schema = JSON.parse(JSON.stringify(mongoose.models[key].schema.paths));
+              var tree = mongoose.models[key].schema.tree;
+              console.log(tree);
+              for (var field in schema) {
+                if (!schema[field].instance) {
+                  if (typeof tree[field] == 'object')
+                    schema[field].instance = tree[field].type.name;
+                  else
+                    schema[field].instance = tree[field].name;
+                }
+                if (tree[field].ref)
+                  schema[field].ref = tree[field].ref;
+              }
+
+              schemas[key] = schema;
+            }
+          res.send(schemas);
           //GET ROWS FROM MODEL
         } else if (req.path.indexOf(path + '/models/') === 0) {
           var modelName = req.path.replace(path + '/models/', '');
@@ -94,7 +108,6 @@ module.exports = function (path, options) {
           next();
       } else if (req.path == path) {
         if (req.method == 'POST') {
-          console.log(req.param('username'), req.param('password'));
           options.authentication(req.param('username'), req.param('password'), function (authenticated) {
             if (authenticated)
               fs.readFile(__dirname + '/views/admin.html', 'utf8', function (err, data) {

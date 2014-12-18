@@ -22,14 +22,15 @@
 <div class="container-fluid">
     <h1>mongooseadmin</h1>
 
-    <div class="row">
-        <div id="models" class="col-sm-1">
-        </div>
-        <div id="rows" class="col-sm-5">
-        </div>
-        <div id="data" class="col-sm-6">
+    <ul id="models" class="nav nav-tabs">
+    </ul>
 
+    <div class="row">
+        <div id="rows" class="col-sm-6">
         </div>
+        <form id="data" class="col-sm-6">
+
+        </form>
     </div>
 </div>
 
@@ -39,13 +40,12 @@
     var schemas;
     $(function () {
         $.get('{{path}}/models', function (data) {
-            var models = '<table class="table table-hover table-condensed"><thead><tr><th>Models</th></tr></thead>';
-            for (var name in data) {
-                models += '<tr><td>' + name + '</td></tr>';
-            }
-            models += '</table>';
             schemas = data;
-            $('#models').append(models);
+            var models = '';
+            for (var name in schemas) {
+                models += '<li><a data-toggle="tab" href="#">' + name + '</a></li>'
+            }
+            $('#models').append(models).find('a').first().click();
         });
         function updateRows(modelName) {
             $.get('{{path}}/models/' + modelName, function (data) {
@@ -68,10 +68,12 @@
             });
         }
 
-        $('#models').on('click', 'td', function () {
+        $('#models').on('click', 'a', function () {
             var modelName = $(this).text();
             updateRows(modelName);
+            $('#data').empty();
         });
+
         $('#rows').on('click', 'tr', function () {
             var tr = $(this);
             if (tr.find('td').length > 0) {
@@ -81,13 +83,21 @@
                     for (var field in schema) {
                         if (field !== '__v') {
                             var value = data[field];
-                            if (!schema[field].instance)
-                                schema[field].instance = 'Boolean';
                             var info = ' - ' + schema[field].instance;
+                            if (schema[field].instance == 'ObjectID' && schema[field].ref)
+                                info = ' - ' + schema[field].ref + ' ObjectID';
                             if (schema[field].isRequired)
                                 info += ', required';
+                            var required = schema[field].isRequired ? 'required' : '';
                             var disabled = field == '_id' ? ' disabled ' : '';
-                            result += '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><input class="form-control" id="' + field + '" value="' + value + '"' + disabled + '></div>';
+                            var type = 'text';
+                            if (schema[field].instance == 'Number')
+                                type = 'number';
+                            if (schema[field].instance == 'Boolean') {
+                                value = value ? 'checked' : '';
+                                result += '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><input style="width:auto;height:auto" type="checkbox" class="form-control" id="' + field + '" ' + value + '></div>';
+                            } else
+                                result += '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><input type="' + type + '" ' + required + ' class="form-control" id="' + field + '" value="' + value + '"' + disabled + '></div>';
                         }
                     }
                     $('#data').empty().data('id', tr.closest('table').data('id')).append(result).append('<hr><button class="btn btn-primary" id="update">Update</button> <button class="btn btn-default" id="delete">Delete</button>');
@@ -100,16 +110,25 @@
             var result = '';
             for (var field in schema) {
                 if (field !== '__v' && field !== '_id') {
-                    var value = data[field];
-                    if (!schema[field].instance)
-                        schema[field].instance = 'Boolean';
                     var info = ' - ' + schema[field].instance;
+                    if (schema[field].instance == 'ObjectID' && schema[field].ref)
+                        info = ' - ' + schema[field].ref + ' ObjectID';
+
                     if (schema[field].isRequired)
                         info += ', required';
+                    required = 'required';
+                    var required = schema[field].isRequired ? 'required' : '';
                     var defaultValue = '';
                     if (typeof schema[field].defaultValue != 'undefined')
                         defaultValue = schema[field].defaultValue;
-                    result += '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><input class="form-control" id="' + field + '" value="' + defaultValue + '"></div>';
+                    var type = 'text';
+                    if (schema[field].instance == 'Number')
+                        type = 'number';
+                    if (schema[field].instance == 'Boolean') {
+                        defaultValue = defaultValue ? 'checked' : '';
+                        result += '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><input style="width:auto;height:auto" type="checkbox" class="form-control" id="' + field + '" ' + defaultValue + '></div>';
+                    } else
+                        result += '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><input type="' + type + '" ' + required + ' class="form-control" id="' + field + '" value="' + defaultValue + '"></div>';
                 }
             }
             $('#data').empty().data('id', modelName).append(result).append('<hr><button class="btn btn-primary" id="insert">Insert</button>');
@@ -123,8 +142,8 @@
                 var value = input.val();
                 var field = input.attr('id');
                 var instance = schema[field].instance;
-                if (instance == 'Boolean' && value)
-                    data[field] = value.toLowerCase() == 'true';
+                if (instance == 'Boolean')
+                    data[field] = input.prop('checked') ? true : false;
                 else if (instance == 'Number' && value)
                     data[field] = Number(value);
                 else if (instance == 'Date' && value)
@@ -139,45 +158,55 @@
             return data;
         }
 
+        $('#data').submit(function (e) {
+            return false;
+
+        });
         $('#data').on('click', '#insert', function () {
-            var modelName = $('#data').data('id');
-            var data = getData();
-            $.post('{{path}}/insert', {
-                modelName: modelName,
-                data: JSON.stringify(data)
-            }).done(function (res) {
-                if (res != 'OK')
-                    alert(res);
-                else
-                    updateRows(modelName);
-            });
+            if ($('#data')[0].checkValidity()) {
+                var modelName = $('#data').data('id');
+                var data = getData();
+                $.post('{{path}}/insert', {
+                    modelName: modelName,
+                    data: JSON.stringify(data)
+                }).done(function (res) {
+                    if (res != 'OK')
+                        alert(JSON.stringify(JSON.parse(res), null, 2));
+                    else
+                        updateRows(modelName);
+                });
+            }
         });
 
         $('#data').on('click', '#update', function () {
-            var modelName = $('#data').data('id');
-            var data = getData();
-            $.post('{{path}}/update', {
-                modelName: modelName,
-                data: JSON.stringify(data)
-            }).done(function (res) {
-                if (res != 'OK')
-                    alert(res);
-                else
-                    updateRows(modelName);
-            });
+            if ($('#data')[0].checkValidity()) {
+                var modelName = $('#data').data('id');
+                var data = getData();
+                $.post('{{path}}/update', {
+                    modelName: modelName,
+                    data: JSON.stringify(data)
+                }).done(function (res) {
+                    if (res != 'OK')
+                        alert(JSON.stringify(JSON.parse(res), null, 2));
+                    else
+                        updateRows(modelName);
+                });
+            }
         });
         $('#data').on('click', '#delete', function () {
-            var modelName = $('#data').data('id');
-            var data = getData();
-            $.post('{{path}}/delete', {
-                modelName: modelName,
-                data: JSON.stringify(data)
-            }).done(function (res) {
-                if (res != 'OK')
-                    alert(res);
-                else
-                    updateRows(modelName);
-            });
+            if ($('#data')[0].checkValidity()) {
+                var modelName = $('#data').data('id');
+                var data = getData();
+                $.post('{{path}}/delete', {
+                    modelName: modelName,
+                    data: JSON.stringify(data)
+                }).done(function (res) {
+                    if (res != 'OK')
+                        alert(JSON.stringify(JSON.parse(res), null, 2));
+                    else
+                        updateRows(modelName);
+                });
+            }
         });
     });
 </script>
