@@ -34,8 +34,23 @@ var mongooseadmin = require('mongooseadmin');
 app.use(mongooseadmin('/admin'));
 ```
 
-You can extend with your own authentication:
 
+
+Options
+-------
+You can extend with options:
+
+```
+var options = {
+    title: 'My awesome admin page';
+    }
+app.use(mongooseadmin('/admin', options));
+```
+
+*title* - Changes the page title. Default is 'mongooseadmin'.
+
+*authentication* - A function that takes the parameters username, password and callback.
+The callback expects to receive a boolean value for if the username and password is valid. Example
 ```
 var options = {
     authentication:
@@ -43,13 +58,30 @@ var options = {
             callback(username == 'johndoe' && password == 'supersecret');
         }
     };
-app.use(mongooseadmin('/admin', options));
 ```
 
-Options
--------
-*authentication* A function that takes the parameters username, password and callback.
-The callback expects to receive a boolean value for if the username and password is valid.
+*css* - Add your own css file. Example:
+```
+var options = {
+    css: '/public/myown.css'
+    };
+```
+
+*js* - Add your own javascript file. Example:
+```
+var options = {
+    css: '/public/myown.js'
+    };
+```
+
+*login* - Add your own login url. Just add a FORM that post to your admin url with username and password. Example:
+```
+var options = {
+    css: '/login'
+    };
+```
+
+
 
 Next steps
 ----------

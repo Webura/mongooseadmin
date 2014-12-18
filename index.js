@@ -15,8 +15,22 @@ function getTitleFields(modelName) {
   return fields;
 }
 
+
 module.exports = function (path, options) {
-  if (!options) options = {};
+  if (!options)
+    options = {};
+
+  function getAdminPage(callback) {
+    fs.readFile(__dirname + '/views/admin.html', 'utf8', function (err, data) {
+      if (err) console.error(err);
+      var html = data.replace(/\{\{path\}\}/g, path);
+      html = html.replace('{{css}}', options.css ? '<link rel="stylesheet" href="' + options.css + '">' : '');
+      html = html.replace('{{js}}', options.js ? '<script src="' + options.js + '">' : '');
+      html = html.replace(/\{\{title\}\}/g, options.title || 'mongooseadmin');
+      callback(html);
+    });
+  }
+
   return function adminMiddleware(req, res, next) {
     if (req.path.indexOf(path) === 0) {
       //STATIC FILES
@@ -29,9 +43,8 @@ module.exports = function (path, options) {
       else if (!options.authentication || (req.cookies && req.cookies.admintoken && tokens.indexOf(req.cookies.admintoken) >= 0)) {
         //PAGE
         if (req.path == path)
-          fs.readFile(__dirname + '/views/admin.html', 'utf8', function (err, data) {
-            if (err) console.error(err);
-            res.end(data.replace(/\{\{path\}\}/g, path));
+          getAdminPage(function (html) {
+            res.end(html);
           });
         //GET MODELS AND SCHEMAS
         else if (req.path == path + '/models') {
@@ -109,12 +122,11 @@ module.exports = function (path, options) {
         if (req.method == 'POST') {
           options.authentication(req.param('username'), req.param('password'), function (authenticated) {
             if (authenticated)
-              fs.readFile(__dirname + '/views/admin.html', 'utf8', function (err, data) {
+              getAdminPage(function (html) {
                 var token = Math.random().toString();
                 res.cookie('admintoken', token);
                 tokens.push(token);
-                if (err) console.error(err);
-                res.end(data.replace(/\{\{path\}\}/g, path));
+                res.end(html);
               });
             else
               fs.readFile(__dirname + '/views/login.html', 'utf8', function (err, data) {
@@ -122,10 +134,15 @@ module.exports = function (path, options) {
                 res.end(data.replace(/\{\{path\}\}/g, path));
               });
           });
-        } else fs.readFile(__dirname + '/views/login.html', 'utf8', function (err, data) {
-          if (err) console.error(err);
-          res.end(data.replace(/\{\{path\}\}/g, path));
-        });
+        } else {
+          if (options.login)
+            res.redirect(options.login);
+          else
+            fs.readFile(__dirname + '/views/login.html', 'utf8', function (err, data) {
+              if (err) console.error(err);
+              res.end(data.replace(/\{\{path\}\}/g, path));
+            });
+        }
       } else
         res.status(404).send('Page not found');
     } else

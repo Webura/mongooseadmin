@@ -2,25 +2,21 @@
 <html>
 <head lang="en">
     <meta charset="UTF-8">
-    <title>Admin</title>
+    <title>{{title}}</title>
     <meta name="robots" content="noindex, nofollow">
     <meta name="googlebot" content="noindex, nofollow">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" href="{{path}}/bootstrap.min.css">
     <style>
-        body {
-            font-size: 16px;
-            line-height: 1.5;
-        }
-
         .table-hover td {
             cursor: pointer;
         }
     </style>
+    {{css}}
 </head>
 <body>
 <div class="container-fluid">
-    <h1>mongooseadmin</h1>
+    <h1>{{title}}</h1>
 
     <ul id="models" class="nav nav-tabs">
     </ul>
@@ -210,5 +206,6 @@
         });
     });
 </script>
+{{js}}
 </body>
 </html>
