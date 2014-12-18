@@ -50,7 +50,8 @@ app.use(mongooseadmin('/admin', options));
 ###title
 Changes the page title. Default is 'mongooseadmin'.
 
-*authentication* - A function that takes the parameters username, password and callback.
+###authentication
+A function that takes the parameters username, password and callback.
 The callback expects to receive a boolean value for if the username and password is valid. Example
 ```
 var options = {
