@@ -3,8 +3,7 @@ MongooseAdmin
 
 Minimalist admin page for Node.js projects using Mongoose and Express.js.
 
-![Screenshot](https://raw.githubusercontent.com/Webura/mongooseadmin/master/screenshots/mongooseadmin.jpg "Screenshot")
-
+![Screenshot](https://raw.githubusercontent.com/Webura/mongooseadmin/master/screenshots/mongooseadmin.png "Screenshot")
 
 Why
 ---
