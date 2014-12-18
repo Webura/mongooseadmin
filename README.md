@@ -59,7 +59,7 @@ var options = {
         function (username, password, callback) {
             callback(username == 'johndoe' && password == 'supersecret');
         }
-    };
+};
 ```
 
 ###css
@@ -67,23 +67,23 @@ Add your own css file. Example:
 ```
 var options = {
     css: '/public/myown.css'
-    };
+};
 ```
 
 ###js
 Add your own javascript file. Example:
 ```
 var options = {
-    css: '/public/myown.js'
-    };
+    js: '/public/myown.js'
+};
 ```
 
 ###login
 Add your own login url. Just add a FORM that post to your admin url with username and password. Example:
 ```
 var options = {
-    css: '/login'
-    };
+    login: '/mylogin'
+};
 ```
 
 
