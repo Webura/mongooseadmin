@@ -25,7 +25,7 @@ module.exports = function (path, options) {
       if (err) console.error(err);
       var html = data.replace(/\{\{path\}\}/g, path);
       html = html.replace('{{css}}', options.css ? '<link rel="stylesheet" href="' + options.css + '">' : '');
-      html = html.replace('{{js}}', options.js ? '<script src="' + options.js + '">' : '');
+      html = html.replace('{{js}}', options.js ? '<script src="' + options.js + '"></script>' : '');
       html = html.replace(/\{\{title\}\}/g, options.title || 'mongooseadmin');
       callback(html);
     });

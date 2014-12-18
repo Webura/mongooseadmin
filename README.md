@@ -90,7 +90,6 @@ var options = {
 
 Next steps
 ----------
-- Options for title, layout, etc
 - Add search filters
 - Better support for references by ObjectId
 - Support for sub documents
@@ -100,7 +99,7 @@ License
 
 (The MIT License)
 
-Copyright (c) 2014 Johnny Tsang
+Copyright (c) 2014 Johnny Tsang &lt;johnny@webura.com&gt;
 
 Permission is hereby granted, free of charge, to any person obtaining
 a copy of this software and associated documentation files (the
