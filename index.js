@@ -40,7 +40,6 @@ module.exports = function (path, options) {
             if (mongoose.models.hasOwnProperty(key)) {
               var schema = JSON.parse(JSON.stringify(mongoose.models[key].schema.paths));
               var tree = mongoose.models[key].schema.tree;
-              console.log(tree);
               for (var field in schema) {
                 if (!schema[field].instance) {
                   if (typeof tree[field] == 'object')
