@@ -17,6 +17,16 @@ function getTitleFields(modelName) {
 
 
 module.exports = function (path, options) {
+  var Token = require('./token');
+  Token.find(function (err, data) {
+    if (err) console.error(err);
+    data.forEach(function (token) {
+      if (token.created < Date.now() - 1000 * 60 * 60 * 25 * 7)//1 week
+        token.remove();
+      else
+        tokens.push(token.token);
+    });
+  });
   if (!options)
     options = {};
 
@@ -50,7 +60,7 @@ module.exports = function (path, options) {
         else if (req.path == path + '/models') {
           var schemas = {};
           for (var key in mongoose.models)
-            if (mongoose.models.hasOwnProperty(key)) {
+            if (mongoose.models.hasOwnProperty(key) && key != 'MongooseadminToken') {
               var schema = JSON.parse(JSON.stringify(mongoose.models[key].schema.paths));
               var tree = mongoose.models[key].schema.tree;
               for (var field in schema) {
@@ -126,6 +136,7 @@ module.exports = function (path, options) {
                 var token = Math.random().toString();
                 res.cookie('admintoken', token);
                 tokens.push(token);
+                Token.create({token: token});
                 res.end(html);
               });
             else
