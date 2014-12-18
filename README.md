@@ -22,6 +22,10 @@ What to expect
 3. Options to change authentication etc.
 
 
+Install
+-------
+`npm install mongooseadmin`
+
 How to use
 ----------
 Basic usage
