@@ -91,7 +91,6 @@ var options = {
 Next steps
 ----------
 - Add search filters
-- Better support for references by ObjectId
 - Support for sub documents
 
 License
