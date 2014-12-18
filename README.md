@@ -3,13 +3,17 @@ MongooseAdmin
 
 Minimalist admin page for Node.js projects using Mongoose and Express.js.
 
-![Screenshot](https://raw.githubusercontent.com/Webura/mongooseadmin/master/screenshots/mongooseadmin.png "Screenshot")
 
 Why
 ---
 Main usage will be for small projects where you need an admin page for CRUD operations.
 Just add it as a middleware and use it.
 When your project grows and you have spent days to develop you own admin page, you can remove MongooseAdmin.
+
+Screenshots
+-----------
+![Screenshot](https://raw.githubusercontent.com/Webura/mongooseadmin/master/screenshots/login.png "Screenshot")
+![Screenshot](https://raw.githubusercontent.com/Webura/mongooseadmin/master/screenshots/mongooseadmin.png "Screenshot")
 
 What to expect
 --------------
