@@ -18,7 +18,7 @@
 <div class="container-fluid">
     <h1>{{title}}</h1>
 
-    <ul id="models" class="nav nav-tabs">
+    <ul id="models" class="nav nav-tabs nav-ta">
     </ul>
 
     <div class="row">
@@ -41,7 +41,10 @@
             for (var name in schemas) {
                 models += '<li><a data-toggle="tab" href="#">' + name + '</a></li>'
             }
-            $('#models').append(models).find('a').first().click();
+            $('#models')
+                    .append(models)
+                    .append('<li style="float:right"><a href="{{path}}/logout">Log out</a></li>')
+                    .find('a').first().click();
         });
         function updateRows(modelName) {
             $.get('{{path}}/models/' + modelName, function (data) {
@@ -66,8 +69,10 @@
 
         $('#models').on('click', 'a', function () {
             var modelName = $(this).text();
-            updateRows(modelName);
-            $('#data').empty();
+            if (modelName != 'Log out') {
+                updateRows(modelName);
+                $('#data').empty();
+            }
         });
 
         $('#rows').on('click', 'tr', function () {

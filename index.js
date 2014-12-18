@@ -50,7 +50,10 @@ module.exports = function (path, options) {
         res.sendFile(__dirname + '/static/jquery.min.js');
       else if (req.path == path + '/bootstrap.min.js')
         res.sendFile(__dirname + '/static/bootstrap.min.js');
-      else if (!options.authentication || (req.cookies && req.cookies.admintoken && tokens.indexOf(req.cookies.admintoken) >= 0)) {
+      else if (req.path == (path + '/logout')) {
+        res.cookie('admintoken', null);
+        res.redirect(path);
+      } else if (!options.authentication || (req.cookies && req.cookies.admintoken && tokens.indexOf(req.cookies.admintoken) >= 0)) {
         //PAGE
         if (req.path == path)
           getAdminPage(function (html) {
@@ -128,6 +131,7 @@ module.exports = function (path, options) {
           });
         } else
           next();
+
       } else if (req.path == path) {
         if (req.method == 'POST') {
           options.authentication(req.param('username'), req.param('password'), function (authenticated) {
