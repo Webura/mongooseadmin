@@ -47,7 +47,8 @@ var options = {
 app.use(mongooseadmin('/admin', options));
 ```
 
-*title* - Changes the page title. Default is 'mongooseadmin'.
+###title
+Changes the page title. Default is 'mongooseadmin'.
 
 *authentication* - A function that takes the parameters username, password and callback.
 The callback expects to receive a boolean value for if the username and password is valid. Example
@@ -60,21 +61,24 @@ var options = {
     };
 ```
 
-*css* - Add your own css file. Example:
+###css
+Add your own css file. Example:
 ```
 var options = {
     css: '/public/myown.css'
     };
 ```
 
-*js* - Add your own javascript file. Example:
+###js
+Add your own javascript file. Example:
 ```
 var options = {
     css: '/public/myown.js'
     };
 ```
 
-*login* - Add your own login url. Just add a FORM that post to your admin url with username and password. Example:
+###login
+Add your own login url. Just add a FORM that post to your admin url with username and password. Example:
 ```
 var options = {
     css: '/login'
