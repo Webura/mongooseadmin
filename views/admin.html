@@ -206,8 +206,10 @@
                 }).done(function (res) {
                     if (res != 'OK')
                         alert(JSON.stringify(JSON.parse(res), null, 2));
-                    else
+                    else {
                         updateRows(modelName);
+                        $('#data').empty();
+                    }
                 });
             }
         });
@@ -223,8 +225,10 @@
                 }).done(function (res) {
                     if (res != 'OK')
                         alert(JSON.stringify(JSON.parse(res), null, 2));
-                    else
+                    else {
                         updateRows(modelName);
+                        $('#data').empty();
+                    }
                 });
             }
         });
@@ -240,8 +244,10 @@
                 }).done(function (res) {
                     if (res != 'OK')
                         alert(JSON.stringify(JSON.parse(res), null, 2));
-                    else
+                    else {
                         updateRows(modelName);
+                        $('#data').empty();
+                    }
                 });
             }
         });
