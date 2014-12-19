@@ -5,9 +5,9 @@ var tokens = [];
 function getTitleFields(modelName) {
   var fields = '';
   var maxFields = 3;
-  var schema = mongoose.models[modelName].schema.tree;
+  var schema = mongoose.models[modelName].schema.paths;
   for (var field in schema) {
-    if (schema.hasOwnProperty(field) && maxFields > 0 && field != '_id') {
+    if (schema.hasOwnProperty(field) && maxFields > 0 && field != '_id' && field != '__v') {
       fields += field + ' ';
       maxFields--;
     }
