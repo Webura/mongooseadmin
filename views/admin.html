@@ -11,6 +11,16 @@
         .table-hover td {
             cursor: pointer;
         }
+
+        html, body, .container-fluid, .row, .col-sm-6 {
+            height: 100%;
+        }
+
+        .col-sm-6, .col-sm-5 {
+            overflow: auto;
+            padding-top: 20px;
+            padding-bottom: 50px;
+        }
     </style>
     {{css}}
 </head>
@@ -24,7 +34,7 @@
     <div class="row">
         <div id="rows" class="col-sm-6">
         </div>
-        <form id="data" class="col-sm-6">
+        <form id="data" class="col-sm-5 col-sm-offset-1">
 
         </form>
     </div>
@@ -94,13 +104,14 @@
                 value = data[field];
             else if (typeof schema[field].defaultValue != 'undefined')
                 value = schema[field].defaultValue;
-            var info = ' - ' + schema[field].instance;
+            var info = ' &nbsp; ' + schema[field].instance;
             var select = '';
             if (schema[field].instance == 'ObjectID' && schema[field].ref) {
-                info = ' - ' + schema[field].ref + ' ObjectID';
+                info = ' &nbsp; ' + schema[field].ref + ' ObjectID';
             }
             if (schema[field].isRequired)
                 info += ', required';
+            info = '<span style="font-weight: normal">' + info.toLowerCase() + '</span>';
             var required = schema[field].isRequired ? 'required' : '';
             if (schema[field].instance == 'ObjectID' && schema[field].ref) {
                 var fieldId = '#' + field;
