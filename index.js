@@ -7,7 +7,7 @@ function getTitleFields(modelName) {
   var maxFields = 3;
   var schema = mongoose.models[modelName].schema.tree;
   for (var field in schema) {
-    if (schema.hasOwnProperty(field) && maxFields > 0) {
+    if (schema.hasOwnProperty(field) && maxFields > 0 && field != '_id') {
       fields += field + ' ';
       maxFields--;
     }
@@ -84,7 +84,7 @@ module.exports = function (path, options) {
         } else if (req.path.indexOf(path + '/models/') === 0) {
           var modelName = req.path.replace(path + '/models/', '');
           var fields = getTitleFields(modelName);
-          mongoose.models[modelName].find().select(fields + '_id').exec(function (err, data) {
+          mongoose.models[modelName].find().limit(100).select(fields + '_id').exec(function (err, data) {
             if (err) throw err;
             res.send({data: data, fields: fields.trim().split(' ')});
           });
