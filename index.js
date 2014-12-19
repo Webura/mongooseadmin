@@ -84,7 +84,10 @@ module.exports = function (path, options) {
         } else if (req.path.indexOf(path + '/models/') === 0) {
           var modelName = req.path.replace(path + '/models/', '');
           var fields = getTitleFields(modelName);
-          mongoose.models[modelName].find().limit(100).select(fields + '_id').exec(function (err, data) {
+          var sort = {};
+          if (mongoose.models[modelName].schema._indexes.length)
+            sort = mongoose.models[modelName].schema._indexes[0][0];
+          mongoose.models[modelName].find().limit(100).select(fields + '_id').sort(sort).exec(function (err, data) {
             if (err) throw err;
             res.send({data: data, fields: fields.trim().split(' ')});
           });

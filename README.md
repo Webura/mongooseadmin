@@ -34,7 +34,7 @@ var mongooseadmin = require('mongooseadmin');
 app.use(mongooseadmin('/admin'));
 ```
 
-
+For mongooseadmin to work properly a cookie parser (e.g. cookie-parser) an body parser (e.g. body-parser) for Express is needed.
 
 Options
 -------
