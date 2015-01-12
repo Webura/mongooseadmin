@@ -83,16 +83,9 @@
                         getRows(ref, function (data) {
                             var filter = '<select class="filter form-control" style="max-width:100%" data-field="' +
                                     fieldCopy + '"><option value="">Filter by ' + fieldCopy + '</option>';
-                            var fields = data.fields;
                             var rows = data.data;
                             rows.forEach(function (row) {
-                                filter += '<option value="' + row._id + '">';
-                                fields.forEach(function (field, index) {
-                                    if (index > 0)
-                                        filter += ', ';
-                                    filter += row[field];
-                                });
-                                filter += '</option>'
+                                filter += '<option value="' + row._id + '">' + row._temp + '</option>'
                             });
                             filter += '</select>';
                             $rows.prepend(filter);
@@ -136,6 +129,7 @@
             getRows(modelName, function (data) {
                 var filters = getFilters();
                 var fields = data.fields;
+                var schema = schemas[modelName];
                 var rows = data.data;
                 var table = '<table data-id="' + modelName + '" class="table table-condensed table-hover"><thead><tr>';
                 fields.forEach(function (field) {
@@ -151,7 +145,10 @@
                     if (add) {
                         table += '<tr data-id="' + row._id + '">';
                         fields.forEach(function (field) {
-                            table += '<td>' + row[field] + '</td>';
+                            if (schema[field].instance == 'ObjectID' && schema[field].ref)
+                                table += '<td>' + lookup(schema[field].ref, row[field]) + '</td>';
+                            else
+                                table += '<td>' + row[field] + '</td>';
                         });
                         table += '</tr>';
                     }
@@ -163,6 +160,16 @@
             });
         }
 
+        function lookup(modelName, id) {
+            var result = id;
+            if (modelCache[modelName])
+                modelCache[modelName].data.forEach(function (row) {
+                    if (row._id == id) {
+                        result = row._temp;
+                    }
+                });
+            return result;
+        }
 
         function getRows(modelName, callback) {
             if (modelCache[modelName])
@@ -172,6 +179,15 @@
             else
                 $.get('{{path}}/models/' + modelName, function (data) {
                     modelCache[modelName] = data;
+                    data.data.forEach(function (row) {
+                        var temp = '';
+                        data.fields.forEach(function (field, index) {
+                            if (index > 0)
+                                temp += ', ';
+                            temp += row[field];
+                        });
+                        row._temp = temp;
+                    });
                     callback(modelCache[modelName]);
                 });
         }
@@ -195,18 +211,11 @@
             if (schema[field].instance == 'ObjectID' && schema[field].ref) {
                 var fieldId = '#' + field;
                 getRows(schema[field].ref, function (rows) {
-                    var fields = rows.fields;
                     var selectElement = $(fieldId);
                     if (!schema[field].isRequired)
                         selectElement.append('<option value=""></option>');
                     rows.data.forEach(function (row) {
-                        var option = '<option value="' + row._id + '">';
-                        fields.forEach(function (field, index) {
-                            if (index > 0)
-                                option += ', ';
-                            option += row[field];
-                        });
-                        option += '</option>';
+                        var option = '<option value="' + row._id + '">' + row._temp + '</option>';
                         selectElement.append(option);
                     });
                     selectElement.val(value);

@@ -88,7 +88,9 @@ var options = {
 
 Last modification
 -----------------
-*2015-01-12* - Added filters for referenced data.
+*2015-01-12*
+
+Added filters for referenced data.
 
 Next steps
 ----------
