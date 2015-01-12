@@ -32,7 +32,7 @@
     </ul>
 
     <div class="row">
-        <div id="rows" class="col-sm-6">
+        <div id="rows" class="col-sm-6 form-inline">
 
         </div>
         <form id="data" class="col-sm-5 col-sm-offset-1">
@@ -81,7 +81,7 @@
                     queue++;
                     (function (fieldCopy) {
                         getRows(ref, function (data) {
-                            var filter = '<select class="filter form-control" style="width:auto;max-width:100%" data-field="' +
+                            var filter = '<select class="filter form-control" style="max-width:100%" data-field="' +
                                     fieldCopy + '"><option value="">Filter by ' + fieldCopy + '</option>';
                             var fields = data.fields;
                             var rows = data.data;
