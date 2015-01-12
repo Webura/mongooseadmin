@@ -7,7 +7,13 @@ function getTitleFields(modelName) {
   var maxFields = 3;
   var schema = mongoose.models[modelName].schema.paths;
   for (var field in schema) {
-    if (schema.hasOwnProperty(field) && maxFields > 0 && field != '_id' && field != '__v') {
+    if (schema.hasOwnProperty(field) && field != '_id' && field != '__v' && schema[field].instance == 'ObjectID' && schema[field].options && schema[field].options.ref) {
+      fields += field + ' ';
+      maxFields--;
+    }
+  }
+  for (var field in schema) {
+    if (schema.hasOwnProperty(field) && maxFields > 0 && field != '_id' && field != '__v' && schema[field].instance != 'ObjectID') {
       fields += field + ' ';
       maxFields--;
     }

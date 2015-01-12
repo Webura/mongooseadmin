@@ -33,6 +33,7 @@
 
     <div class="row">
         <div id="rows" class="col-sm-6">
+
         </div>
         <form id="data" class="col-sm-5 col-sm-offset-1">
 
@@ -46,17 +47,123 @@
     var schemas;
     $(function () {
         var modelCache = {};
+        var $models = $('#models');
+        var $data = $('#data');
+        var $rows = $('#rows');
+
+        //GET MODELS
         $.get('{{path}}/models', function (data) {
             schemas = data;
             var models = '';
             for (var name in schemas) {
                 models += '<li><a data-toggle="tab" href="#">' + name + '</a></li>'
             }
-            $('#models')
+            $models
                     .append(models)
                     .append('<li style="float:right"><a href="{{path}}/logout">Log out</a></li>')
                     .find('a').first().click();
         });
+
+        //FILTERING
+        function buildFilters(modelName, callback) {
+            var queue = 1;
+
+            function checkQueue() {
+                queue--;
+                if (queue == 0)
+                    callback();
+            }
+
+            var schema = schemas[modelName];
+            for (var field in schema) {
+                if (schema.hasOwnProperty(field) && schema[field].instance == 'ObjectID' && schema[field].ref) {
+                    var ref = schema[field].ref;
+                    queue++;
+                    (function (fieldCopy) {
+                        getRows(ref, function (data) {
+                            var filter = '<select class="filter form-control" style="width:auto;max-width:100%" data-field="' +
+                                    fieldCopy + '"><option value="">Filter by ' + fieldCopy + '</option>';
+                            var fields = data.fields;
+                            var rows = data.data;
+                            rows.forEach(function (row) {
+                                filter += '<option value="' + row._id + '">';
+                                fields.forEach(function (field, index) {
+                                    if (index > 0)
+                                        filter += ', ';
+                                    filter += row[field];
+                                });
+                                filter += '</option>'
+                            });
+                            filter += '</select>';
+                            $rows.prepend(filter);
+                            checkQueue();
+                        });
+                    })(field);
+                }
+            }
+            checkQueue();
+        }
+
+        $rows.on('change', '.filter', function () {
+            updateRows($rows.find('table').data('id'));
+        });
+
+        function getFilters() {
+            var filters = [];
+            $('.filter').each(function (index, filter) {
+                filter = $(filter);
+                var field = filter.data('field');
+                var id = filter.val();
+                if (id) {
+                    filters.push({id: id, field: field});
+                }
+            });
+            return filters;
+        }
+
+        //REFRESH MODEL ROWS
+        $models.on('click', 'a', function () {
+            var modelName = $(this).text();
+            $data.empty();
+            $rows.empty();
+            if (modelName != 'Log out') {
+                buildFilters(modelName, function () {
+                    updateRows(modelName);
+                });
+            }
+        });
+        function updateRows(modelName) {
+            getRows(modelName, function (data) {
+                var filters = getFilters();
+                var fields = data.fields;
+                var rows = data.data;
+                var table = '<table data-id="' + modelName + '" class="table table-condensed table-hover"><thead><tr>';
+                fields.forEach(function (field) {
+                    table += '<th>' + field.toUpperCase() + '</th>';
+                });
+                table += '</tr></thead>';
+                rows.forEach(function (row) {
+                    var add = true;
+                    filters.forEach(function (filter) {
+                        if (!row[filter.field] || row[filter.field] !== filter.id)
+                            add = false;
+                    });
+                    if (add) {
+                        table += '<tr data-id="' + row._id + '">';
+                        fields.forEach(function (field) {
+                            table += '<td>' + row[field] + '</td>';
+                        });
+                        table += '</tr>';
+                    }
+                });
+                table += '</table>';
+                $rows.find('table').remove();
+                $rows.find('button').remove();
+                $rows.append(table).append('<button class="btn btn-primary" id="newRow">New row</button>');
+            });
+        }
+
+
         function getRows(modelName, callback) {
             if (modelCache[modelName])
                 setTimeout(function () {
@@ -69,35 +176,7 @@
                 });
         }
 
-        function updateRows(modelName) {
-            getRows(modelName, function (data) {
-                var fields = data.fields;
-                data = data.data;
-                var rows = '<table data-id="' + modelName + '" class="table table-condensed table-hover"><thead><tr>';
-                fields.forEach(function (field) {
-                    rows += '<th>' + field.toUpperCase() + '</th>';
-                });
-                rows += '</tr></thead>';
-                data.forEach(function (row) {
-                    rows += '<tr data-id="' + row._id + '">';
-                    fields.forEach(function (field) {
-                        rows += '<td>' + row[field] + '</td>';
-                    });
-                    rows += '</tr>';
-                });
-                rows += '</table>';
-                $('#rows').empty().append(rows).append('<button class="btn btn-primary" id="newRow">New row</button>');
-            });
-        }
-
-        $('#models').on('click', 'a', function () {
-            var modelName = $(this).text();
-            $('#data').empty();
-            $('#rows').empty();
-            if (modelName != 'Log out')
-                updateRows(modelName);
-        });
-
+        //BUILD INPUT FORM
         function buildInput(field, schema, data) {
             var value = '';
             if (data)
@@ -115,32 +194,45 @@
             var required = schema[field].isRequired ? 'required' : '';
             if (schema[field].instance == 'ObjectID' && schema[field].ref) {
                 var fieldId = '#' + field;
-                var options = '';
                 getRows(schema[field].ref, function (rows) {
+                    var fields = rows.fields;
                     var selectElement = $(fieldId);
                     if (!schema[field].isRequired)
                         selectElement.append('<option value=""></option>');
                     rows.data.forEach(function (row) {
-                        selectElement.append('<option value="' + row._id + '">' + row[rows.fields[0]] + ', ' + row[rows.fields[1]] + ', ' + row[rows.fields[2]] + '</option>');
+                        var option = '<option value="' + row._id + '">';
+                        fields.forEach(function (field, index) {
+                            if (index > 0)
+                                option += ', ';
+                            option += row[field];
+                        });
+                        option += '</option>';
+                        selectElement.append(option);
                     });
                     selectElement.val(value);
                 });
-                return '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><select class="form-control" id="' + field + '"></select></div>'
+                return '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info +
+                        '</label><select class="form-control" id="' + field + '"></select></div>'
             }
             var type = schema[field].instance == 'Number' ? 'number' : 'text';
             var disabled = field == '_id' ? ' disabled ' : '';
             if (schema[field].instance == 'Boolean') {
                 value = value ? 'checked' : '';
-                return '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><input style="width:auto;height:auto" type="checkbox" class="form-control" id="' + field + '" ' + value + '></div>';
+                return '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info +
+                        '</label><input style="width:auto;height:auto" type="checkbox" class="form-control" id="' +
+                        field + '" ' + value + '></div>';
             } else
-                return '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info + '</label><input type="' + type + '" ' + required + ' class="form-control" id="' + field + '" value="' + value + '"' + disabled + '>' + select + '</div>';
+                return '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info +
+                        '</label><input type="' + type + '" ' + required + ' class="form-control" id="' +
+                        field + '" value="' + value + '"' + disabled + '>' + select + '</div>';
         }
 
-        $('#rows').on('click', 'tr', function () {
+        //READ DATA
+        $rows.on('click', 'tr', function () {
             var tr = $(this);
             $('#rows .info').removeClass('info');
             tr.addClass('info');
-            $('#data').empty();
+            $data.empty();
             if (tr.find('td').length > 0) {
                 $.get('{{path}}/data/' + tr.closest('table').data('id') + '/' + tr.data('id'), function (data) {
                     var schema = schemas[tr.closest('table').data('id')];
@@ -150,12 +242,17 @@
                             result += buildInput(field, schema, data);
                         }
                     }
-                    $('#data').empty().data('id', tr.closest('table').data('id')).append(result).append('<hr><button class="btn btn-primary" id="update">Update</button> <button class="btn btn-default" id="delete">Delete</button>');
+                    $data
+                            .empty()
+                            .data('id', tr.closest('table').data('id'))
+                            .append(result)
+                            .append('<hr><button class="btn btn-primary" id="update">Update</button> <button class="btn btn-default" id="delete">Delete</button>');
                 });
             }
         });
 
-        $('#rows').on('click', '#newRow', function () {
+        //OPEN NEW FORM
+        $rows.on('click', '#newRow', function () {
             var modelName = $(this).prev().data('id');
             var schema = schemas[modelName];
             var result = '';
@@ -164,10 +261,16 @@
                     result += buildInput(field, schema);
                 }
             }
-            $('#data').empty().data('id', modelName).append(result).append('<hr><button class="btn btn-primary" id="insert">Insert</button>');
+            $data
+                    .empty()
+                    .data('id', modelName)
+                    .append(result)
+                    .append('<hr><button class="btn btn-primary" id="insert">Insert</button>');
         });
+
+        //READ DATA
         function getData() {
-            var modelName = $('#data').data('id');
+            var modelName = $data.data('id');
             var schema = schemas[modelName];
             var data = {};
             $('#data input, #data select').each(function (index, input) {
@@ -191,13 +294,14 @@
             return data;
         }
 
-        $('#data').submit(function (e) {
+        $data.submit(function (e) {
             return false;
-
         });
-        $('#data').on('click', '#insert', function () {
-            if ($('#data')[0].checkValidity()) {
-                var modelName = $('#data').data('id');
+
+        //INSERT DATA
+        $data.on('click', '#insert', function () {
+            if ($data[0].checkValidity()) {
+                var modelName = $data.data('id');
                 var data = getData();
                 modelCache[modelName] = null;
                 $.post('{{path}}/insert', {
@@ -208,15 +312,16 @@
                         alert(JSON.stringify(JSON.parse(res), null, 2));
                     else {
                         updateRows(modelName);
-                        $('#data').empty();
+                        $data.empty();
                     }
                 });
             }
         });
 
-        $('#data').on('click', '#update', function () {
-            if ($('#data')[0].checkValidity()) {
-                var modelName = $('#data').data('id');
+        //UPDATE DATA
+        $data.on('click', '#update', function () {
+            if ($data[0].checkValidity()) {
+                var modelName = $data.data('id');
                 var data = getData();
                 modelCache[modelName] = null;
                 $.post('{{path}}/update', {
@@ -227,15 +332,16 @@
                         alert(JSON.stringify(JSON.parse(res), null, 2));
                     else {
                         updateRows(modelName);
-                        $('#data').empty();
+                        $data.empty();
                     }
                 });
             }
         });
 
-        $('#data').on('click', '#delete', function () {
-            if ($('#data')[0].checkValidity()) {
-                var modelName = $('#data').data('id');
+        //DELETE DATA
+        $data.on('click', '#delete', function () {
+            if ($data[0].checkValidity()) {
+                var modelName = $data.data('id');
                 var data = getData();
                 modelCache[modelName] = null;
                 $.post('{{path}}/delete', {
@@ -246,7 +352,7 @@
                         alert(JSON.stringify(JSON.parse(res), null, 2));
                     else {
                         updateRows(modelName);
-                        $('#data').empty();
+                        $data.empty();
                     }
                 });
             }
