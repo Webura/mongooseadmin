@@ -2,7 +2,7 @@
   "author": "Johnny Tsang",
   "name": "mongooseadmin",
   "description": "Minimalist admin page for Node.js projects using Mongoose and Express.js",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "repository": {
     "url": "https://github.com/Webura/mongooseadmin"
   },

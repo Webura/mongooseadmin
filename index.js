@@ -79,7 +79,7 @@ module.exports = function (path, options) {
                   else
                     schema[field].instance = tree[field].name;
                 }
-                if (tree[field].ref)
+                if (tree[field] && tree[field].ref)
                   schema[field].ref = tree[field].ref;
               }
 

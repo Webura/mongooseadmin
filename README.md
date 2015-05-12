@@ -92,10 +92,13 @@ Last modification
 
 Added filters for referenced data.
 
+*2015-05-12*
+
+Better support for sub documents.
+
 Next steps
 ----------
 - Add free text search filters
-- Support for sub documents
 
 License
 -------
