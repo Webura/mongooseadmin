@@ -96,6 +96,10 @@ Added filters for referenced data.
 
 Better support for sub documents.
 
+*2015-06-01*
+
+Added read limit to only return first 10000 documents for performance concern.
+
 Next steps
 ----------
 - Add free text search filters

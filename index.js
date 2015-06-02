@@ -93,7 +93,7 @@ module.exports = function (path, options) {
           var sort = {};
           if (mongoose.models[modelName].schema._indexes.length)
             sort = mongoose.models[modelName].schema._indexes[0][0];
-          mongoose.models[modelName].find().limit(100).select(fields + '_id').sort(sort).exec(function (err, data) {
+          mongoose.models[modelName].find().limit(10000).select(fields + '_id').sort(sort).exec(function (err, data) {
             if (err) throw err;
             res.send({data: data, fields: fields.trim().split(' ')});
           });
