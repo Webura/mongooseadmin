@@ -31,7 +31,7 @@ How to use
 Basic usage
 ```
 var mongooseadmin = require('mongooseadmin');
-app.use(mongooseadmin('/admin'));
+app.use('/admin',mongooseadmin());
 ```
 
 For mongooseadmin to work properly a cookie parser (e.g. cookie-parser) an body parser (e.g. body-parser) for Express is needed.
@@ -44,13 +44,13 @@ You can extend with options:
 var options = {
     title: 'My awesome admin page';
     }
-app.use(mongooseadmin('/admin', options));
+app.use('/admin', mongooseadmin(options));
 ```
 
-###title
+### title
 Changes the page title. Default is 'mongooseadmin'.
 
-###authentication
+### authentication
 A function that takes the parameters username, password and callback.
 The callback expects to receive a boolean value for if the username and password is valid. Example
 ```
@@ -62,7 +62,7 @@ var options = {
 };
 ```
 
-###css
+### css
 Add your own css file. Example:
 ```
 var options = {
@@ -70,7 +70,7 @@ var options = {
 };
 ```
 
-###js
+### js
 Add your own javascript file. Example:
 ```
 var options = {
@@ -78,7 +78,7 @@ var options = {
 };
 ```
 
-###login
+### login
 Add your own login url. Just add a FORM that post to your admin url with username and password. Example:
 ```
 var options = {
@@ -99,6 +99,13 @@ Better support for sub documents.
 *2015-06-01*
 
 Added read limit to only return first 10000 documents for performance concern.
+
+*2015-07-01 version 1.0.0*
+
+Breaking change: notice that the usage is `app.use('/admin',mongooseadmin());` instead of the old one `app.use(mongooseadmin('/admin'));`. 
+This means that it behaves like an Express router rather than a middleware.
+
+Added npm package mongooserest and improved the readability of underlying code. 
 
 Next steps
 ----------
