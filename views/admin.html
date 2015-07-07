@@ -313,7 +313,7 @@
           var schema = schemas[tr.closest('table').data('id')];
           var result = '';
           for (var field in schema) {
-            if (field !== '__v') {
+            if (field !== '__v' && field != '_indexes') {
               result += buildInput(field, schema, data);
             }
           }
@@ -332,7 +332,7 @@
       var schema = schemas[modelName];
       var result = '';
       for (var field in schema) {
-        if (field !== '__v' && field !== '_id') {
+        if (field != '__v' && field != '_id' && field != '_indexes') {
           result += buildInput(field, schema);
         }
       }
