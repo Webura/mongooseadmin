@@ -59,7 +59,7 @@ module.exports = function (options) {
       } else
         fs.readFile(__dirname + '/views/login.html', 'utf8', function (err, data) {
           if (err) console.error(err);
-          res.end(data.replace(/\{\{path\}\}/g, path));
+          res.end(data.replace(/\{\{path\}\}/g, req.baseUrl));
         });
     });
   });
@@ -93,6 +93,7 @@ module.exports = function (options) {
           if (tree[field] && tree[field].ref)
             schema[field].ref = tree[field].ref;
         }
+        schema._indexes = mongoose.models[key].schema._indexes;
         schemas[key] = schema;
       }
     res.send(schemas);

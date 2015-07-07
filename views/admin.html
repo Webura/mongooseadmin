@@ -153,7 +153,7 @@
         var allFields = Object.keys(schema);
         var fields = [];
         allFields.forEach(function (field) {
-          if (field != '__v' && fields.length < 3)
+          if (field != '__v' && field != '_indexes' && fields.length < 3)
             fields.push(field);
         });
 
@@ -208,14 +208,23 @@
         setTimeout(function () {
           callback(modelCache[modelName]);
         }, 10);
-      else
-        $.get(location.pathname + '/api/' + modelName, function (rows) {
+      else {
+        var sort = '';
+        var schema = schemas[modelName];
+        if (schema._indexes.length) {
+          var key = Object.keys(schema._indexes[0][0])[0];
+          if (schema._indexes[0][0][key] == -1)
+            sort = '?sort=-' + key;
+          else
+            sort = '?sort=' + key;
+        }
+        $.get(location.pathname + '/api/' + modelName + sort, function (rows) {
           modelCache[modelName] = rows;
           var schema = schemas[modelName];
           var allFields = Object.keys(schema);
           var fields = [];
           allFields.forEach(function (field) {
-            if (field != '__v' && schema[field].instance != 'ObjectID' && fields.length < 3)
+            if (field != '__v' && field != '_indexes' && schema[field].instance != 'ObjectID' && fields.length < 3)
               fields.push(field);
           });
 
@@ -223,7 +232,7 @@
           rows.forEach(function (row) {
             var temp = '';
             fields.forEach(function (field, index) {
-              if (row.hasOwnProperty(field)) {
+              if (row.hasOwnProperty(field) && field != '__v' && field != '_indexes') {
                 if (index > 0)
                   temp += ', ';
                 temp += row[field];
@@ -233,6 +242,7 @@
           });
           callback(rows);
         });
+      }
     }
 
     //BUILD INPUT FORM
