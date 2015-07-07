@@ -26,7 +26,7 @@ var book = new Schema({
   },
   created: {type: Number, default: Date.now}
 });
-book.index({title: 1}, {unique: false});
+book.index({title: 1, published: -1}, {unique: false});
 exports.Book = mongoose.model('Book', book);
 
 var category = new Schema({
@@ -35,10 +35,10 @@ var category = new Schema({
 exports.Category = mongoose.model('Category', category);
 
 var user = new mongoose.Schema({
-  email: { type: String, unique: true, lowercase: true },
+  email: {type: String, unique: true, lowercase: true},
   profile: {
-    name: { type: String, default: '' },
-    age: { type: Number, default: 0 }
+    name: {type: String, default: ''},
+    age: {type: Number, default: 0}
   },
   resetPasswordToken: String,
   resetPasswordExpires: Date
