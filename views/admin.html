@@ -260,7 +260,7 @@
       var value = '';
       if (data && data.hasOwnProperty(field))
         value = data[field];
-      if (data && field.indexOf('.') > 0 && data[field.split('.')[0]])
+      else if (data && field.indexOf('.') > 0 && data[field.split('.')[0]])
         value = data[field.split('.')[0]][field.split('.')[1]];
       else if (typeof schema[field].defaultValue != 'undefined')
         value = schema[field].defaultValue;

@@ -107,6 +107,11 @@ This means that it behaves like an Express router rather than a middleware.
 
 Added npm package mongooserest and improved the readability of underlying code. 
 
+*2015-08-11 version 1.0.4*
+
+Fixed default value bug.
+
+
 Next steps
 ----------
 - Add free text search filters
