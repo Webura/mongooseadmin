@@ -281,9 +281,14 @@
             selectElement.append('<option value=""></option>');
           rows.forEach(function (row) {
             var option = '<option value="' + row._id + '">' + row._temp + '</option>';
+            if (value == row._id)
+              option = '<option value="' + row._id + '" selected>' + row._temp + '</option>';
             selectElement.append(option);
           });
           selectElement.val(value);
+          var selected = selectElement.find('[id="' + value + '"]');
+          if (!selected.length)
+            selectElement.children().first().attr('selected', 'selected');
         });
         return '<div class="form-group"><label for="' + field + '">' + field.toUpperCase() + info +
             '</label><select class="form-control" id="' + field + '"></select></div>'
