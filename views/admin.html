@@ -349,9 +349,11 @@
     });
 
     //READ DATA
-    function getData() {
+    function getData(callback) {
       var modelName = $data.data('id');
       var schema = schemas[modelName];
+      var promises = [];
+      var invalidIds = [];
       var data = {};
       $('#data input, #data select').each(function (index, input) {
         input = $(input);
@@ -382,10 +384,50 @@
           node[fieldName] = value;
         else if (instance == 'ObjectID' && !value)
           node[fieldName] = '';
-        else if (value)
+        else if (instance == 'Array' && fieldName == 'permissions') {
+          node[fieldName] = value.split(',');
+          validateIds('Permission', node[fieldName], promises, invalidIds);
+        } else if (instance == 'Array' && fieldName == 'groups') {
+          node[fieldName] = value.split(',');
+          validateIds('Group', node[fieldName], promises, invalidIds);
+        } else if (instance == 'Array' && fieldName == 'accounts') {
+          node[fieldName] = value.split(',');
+          validateIds('Account', node[fieldName], promises, invalidIds);
+        } else if (value)
           errorDialog('Unsupported field "' + instance + '" type on ' + fieldName);
       });
-      return data;
+
+      // make sure we are done validating Id's
+      $.when.apply(null, promises).done(function() {
+        if (0 == invalidIds.length) {
+          callback(data);
+        } else {
+          errorDialog('Unable to update, the following ids are not valid ' + invalidIds);
+        }
+      })
+    }
+
+    function validateIds(type, ids, promises, invalidIds) {
+      var id;
+      for (id of ids) {
+        (function(id) {
+          console.log('validateId## ' + id);
+          var request = $.ajax(location.pathname + '/api/' + type + '/' + id, {type: 'GET'})
+            .done(function (res) {
+              // unfotunately mongooserest returns 200 even if id doesn't exist
+              // so we must check the result (empty result means id does not exist).
+              if (!res) {
+                invalidIds.push(id);
+              }
+              $data.empty();
+            })
+            .error(function (res) {
+              errorDialog('Unable to validate ID ' + id);
+              invalidIds.push(id);
+            });
+          promises.push(request);
+        })(id);
+      }
     }
 
     $data.submit(function (e) {
@@ -396,19 +438,21 @@
     $data.on('click', '#insert', function () {
       if ($data[0].checkValidity()) {
         var modelName = $data.data('id');
-        var data = getData();
-        modelCache[modelName] = null;
-        $.post(location.pathname + '/api/' + modelName, data)
-            .done(function (res) {
-              updateRows(modelName);
-              $data.empty();
-            })
-            .error(function (res) {
-              if (res.responseJSON)
-                errorDialog(JSON.stringify(res.responseJSON, null, 2).replace(/ /g, '&nbsp;').replace(/\n/g, '<br>'));
-              else
-                errorDialog(res.responseText)
-            });
+        getData(function (data) {
+          modelCache[modelName] = null;
+          $.post(location.pathname + '/api/' + modelName, data)
+              .done(function (res) {
+                updateRows(modelName);
+                $data.empty();
+              })
+              .error(function (res) {
+                if (res.responseJSON)
+                  errorDialog(JSON.stringify(res.responseJSON, null, 2).replace(/ /g, '&nbsp;').replace(/\n/g, '<br>'));
+                else
+                  errorDialog(res.responseText)
+              });
+        })
+        
       }
     });
 
@@ -416,19 +460,21 @@
     $data.on('click', '#update', function () {
       if ($data[0].checkValidity()) {
         var modelName = $data.data('id');
-        var data = getData();
-        modelCache[modelName] = null;
-        $.ajax(location.pathname + '/api/' + modelName + '/' + data._id, {type: 'PUT', data: data, dataType: 'json'})
-            .done(function (res) {
-              updateRows(modelName);
-              $data.empty();
-            })
-            .error(function (res) {
-              if (res.responseJSON)
-                errorDialog(JSON.stringify(res.responseJSON, null, 2).replace(/ /g, '&nbsp;').replace(/\n/g, '<br>'));
-              else
-                errorDialog(res.responseText)
-            });
+        getData(function (data) {
+          modelCache[modelName] = null;
+          $.ajax(location.pathname + '/api/' + modelName + '/' + data._id, {type: 'PUT', data: data, dataType: 'json'})
+              .done(function (res) {
+                updateRows(modelName);
+                $data.empty();
+              })
+              .error(function (res) {
+                if (res.responseJSON)
+                  errorDialog(JSON.stringify(res.responseJSON, null, 2).replace(/ /g, '&nbsp;').replace(/\n/g, '<br>'));
+                else
+                  errorDialog(res.responseText)
+              });
+        
+        })
       }
     });
 
@@ -436,19 +482,21 @@
     $data.on('click', '#delete', function () {
       if ($data[0].checkValidity()) {
         var modelName = $data.data('id');
-        var data = getData();
-        modelCache[modelName] = null;
-        $.ajax(location.pathname + '/api/' + modelName + '/' + data._id, {type: 'DELETE', data: data})
-            .done(function (res) {
-              updateRows(modelName);
-              $data.empty();
-            })
-            .error(function (res) {
-              if (res.responseJSON)
-                errorDialog(JSON.stringify(res.responseJSON, null, 2).replace(/ /g, '&nbsp;').replace(/\n/g, '<br>'));
-              else
-                errorDialog(res.responseText)
-            });
+
+        getData(function (data) {
+          modelCache[modelName] = null;
+          $.ajax(location.pathname + '/api/' + modelName + '/' + data._id, {type: 'DELETE', data: data})
+              .done(function (res) {
+                updateRows(modelName);
+                $data.empty();
+              })
+              .error(function (res) {
+                if (res.responseJSON)
+                  errorDialog(JSON.stringify(res.responseJSON, null, 2).replace(/ /g, '&nbsp;').replace(/\n/g, '<br>'));
+                else
+                  errorDialog(res.responseText)
+              });
+        })
       }
     });
   });
